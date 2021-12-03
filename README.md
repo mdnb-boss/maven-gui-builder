@@ -13,3 +13,4 @@
 - [ ] Aplicar o comando construido ao cmd ou shell
 - [ ] Melhorias e correções de possiveis erros
 - [ ] Testes Unitários
+- [ ] Aplicar o `launch4j` ao projeto e utilizar o `Inno Setup`
