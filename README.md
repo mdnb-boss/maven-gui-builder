@@ -10,7 +10,7 @@
   4. Marque quais módulos deseja construir, e utilize as 3 opções (Clean, Clean and Build, Build).
 
 ### A fazer
-- [ ] Aplicar o comando construido ao cmd ou shell
+- [x] Aplicar o comando construido ao cmd ou shell
 - [ ] Melhorias e correções de possiveis erros
 - [ ] Testes Unitários
 - [ ] Aplicar o `launch4j` ao projeto e utilizar o `Inno Setup`
