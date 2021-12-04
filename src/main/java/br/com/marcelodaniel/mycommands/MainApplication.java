@@ -23,6 +23,7 @@ public class MainApplication {
 //                    break;
 //                }
 //            }
+            System.out.println(System.getProperty("os.name"));
             UIManager.setLookAndFeel( new FlatDarkLaf() );
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
             java.util.logging.Logger.getLogger(HomeView.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);

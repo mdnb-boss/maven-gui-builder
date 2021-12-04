@@ -4,44 +4,54 @@
  */
 package br.com.marcelodaniel.mycommands.home;
 
+import br.com.marcelodaniel.mycommands.configuration.ConfigurationFactory;
+import br.com.marcelodaniel.mycommands.configuration.ConfigurationFactoryImpl;
+import br.com.marcelodaniel.mycommands.executor.ExecutorTask;
 import br.com.marcelodaniel.mycommands.view.CheckboxListCellRenderer;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.DefaultListSelectionModel;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.XML;
 
+import static br.com.marcelodaniel.mycommands.configuration.ConfigurationFactoryImpl.KEY_MAVEN_PATH;
+import static br.com.marcelodaniel.mycommands.configuration.ConfigurationFactoryImpl.KEY_PROJECT_PATH;
+
 /**
- *
  * @author marcelo
  */
-public class HomeView extends javax.swing.JFrame {
+public class HomeView extends javax.swing.JFrame implements ExecutorTask.LoggerFactory {
 
     private String[] modulosLidos;
 
     private HomeService homeService;
-    
-    public interface LoggerCmd {
-        void sendLine(String line);
-    }
-    
-    private final LoggerCmd loggerCmd;
+
+    private ConfigurationFactory configurationFactory;
 
     /**
      * Creates new form HomeView
      */
     public HomeView() {
         initComponents();
-        this.loggerCmd = (line) -> {
-            txtareaCmdLog.append(line + "\n");
-        };
         this.homeService = new HomeServiceImpl();
+
+        try {
+            this.configurationFactory = new ConfigurationFactoryImpl();
+            this.txFieldPathProject.setText(configurationFactory.get(KEY_PROJECT_PATH));
+            this.txFieldMavenPath.setText(configurationFactory.get(KEY_MAVEN_PATH));
+            if (!configurationFactory.get(KEY_PROJECT_PATH).isEmpty()) {
+                loadModules();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -60,11 +70,12 @@ public class HomeView extends javax.swing.JFrame {
         btnClean = new javax.swing.JButton();
         btnBuild = new javax.swing.JButton();
         btnCleanBuild = new javax.swing.JButton();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        listCheckboxs = new javax.swing.JList<>();
         txFieldPathProject = new javax.swing.JTextField();
         btnMavenSave = new javax.swing.JButton();
         chkSkipTests = new javax.swing.JCheckBox();
+        jSplitPane1 = new javax.swing.JSplitPane();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        listCheckboxs = new javax.swing.JList<>();
         jScrollPane2 = new javax.swing.JScrollPane();
         txtareaCmdLog = new javax.swing.JTextArea();
 
@@ -120,13 +131,6 @@ public class HomeView extends javax.swing.JFrame {
             }
         });
 
-        listCheckboxs.setModel(new javax.swing.AbstractListModel<String>() {
-            String[] strings = { };
-            public int getSize() { return strings.length; }
-            public String getElementAt(int i) { return strings[i]; }
-        });
-        jScrollPane1.setViewportView(listCheckboxs);
-
         txFieldPathProject.setText("/home/marcelo/Documentos/GitHub/trato-api");
 
         btnMavenSave.setText("save");
@@ -144,23 +148,33 @@ public class HomeView extends javax.swing.JFrame {
             }
         });
 
+        jSplitPane1.setDividerLocation(300);
+        jSplitPane1.setOrientation(javax.swing.JSplitPane.VERTICAL_SPLIT);
+
+        listCheckboxs.setModel(new javax.swing.AbstractListModel<String>() {
+            String[] strings = { };
+            public int getSize() { return strings.length; }
+            public String getElementAt(int i) { return strings[i]; }
+        });
+        jScrollPane1.setViewportView(listCheckboxs);
+
+        jSplitPane1.setTopComponent(jScrollPane1);
+
         txtareaCmdLog.setColumns(20);
         txtareaCmdLog.setRows(5);
         jScrollPane2.setViewportView(txtareaCmdLog);
+
+        jSplitPane1.setRightComponent(jScrollPane2);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+            .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jScrollPane2)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
-                        .addComponent(jLabel1)
-                        .addGap(0, 305, Short.MAX_VALUE))
-                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jSplitPane1)
+                    .addGroup(layout.createSequentialGroup()
                         .addComponent(chkSkipTests)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(btnClean)
@@ -168,14 +182,18 @@ public class HomeView extends javax.swing.JFrame {
                         .addComponent(btnCleanBuild)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(btnBuild))
-                    .addGroup(layout.createSequentialGroup()
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addGap(0, 0, Short.MAX_VALUE)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
                             .addComponent(txFieldPathProject, javax.swing.GroupLayout.DEFAULT_SIZE, 755, Short.MAX_VALUE)
                             .addComponent(txFieldMavenPath))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
                             .addComponent(btnPomSave, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(btnMavenSave, javax.swing.GroupLayout.Alignment.LEADING))))
+                            .addComponent(btnMavenSave, javax.swing.GroupLayout.Alignment.LEADING)))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(jLabel1)
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -191,11 +209,9 @@ public class HomeView extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(txFieldMavenPath, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(btnMavenSave))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jSplitPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 560, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 401, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 153, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnBuild)
                     .addComponent(btnCleanBuild)
@@ -210,6 +226,8 @@ public class HomeView extends javax.swing.JFrame {
     private void btnCleanActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCleanActionPerformed
         StringBuilder builder = new StringBuilder();
         builder.append(txFieldMavenPath.getText());
+        builder.append(" -f ");
+        builder.append(txFieldPathProject.getText() + "/pom.xml");
         builder.append(" clean");
 
         int[] selecionados = listCheckboxs.getSelectedIndices();
@@ -232,23 +250,26 @@ public class HomeView extends javax.swing.JFrame {
         try {
             StringBuilder builder = new StringBuilder();
             builder.append(txFieldMavenPath.getText());
-            builder.append(" clean build");
-            
+            builder.append(" clean install");
+
             int[] selecionados = listCheckboxs.getSelectedIndices();
             for (int selecionado : selecionados) {
                 builder.append(" -pl " + modulosLidos[selecionado]);
             }
-            
+
             builder.append(" -am");
-            
+
             if (chkSkipTests.isSelected()) {
                 builder.append(" -Dmaven.test.skip=true ");
             } else {
                 builder.append(" -Dmaven.test.skip=false ");
             }
-            
+
+            builder.append(" -f ");
+            builder.append(txFieldPathProject.getText() + "/pom.xml");
+
             System.out.println(builder.toString());
-            
+
             runCommand(builder.toString());
         } catch (IOException ex) {
             Logger.getLogger(HomeView.class.getName()).log(Level.SEVERE, null, ex);
@@ -258,7 +279,10 @@ public class HomeView extends javax.swing.JFrame {
     }//GEN-LAST:event_btnCleanBuildActionPerformed
 
     private void btnPomSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPomSaveActionPerformed
+        loadModules();
+    }//GEN-LAST:event_btnPomSaveActionPerformed
 
+    private void loadModules() {
         listCheckboxs.setCellRenderer(new CheckboxListCellRenderer());
         listCheckboxs.setSelectionModel(new DefaultListSelectionModel() {
             public void setSelectionInterval(int index0, int index1) {
@@ -271,6 +295,9 @@ public class HomeView extends javax.swing.JFrame {
         });
 
         try {
+            configurationFactory.addProjectPath(txFieldPathProject.getText());
+            configurationFactory.addMavenPath(txFieldMavenPath.getText());
+
             File pomFile = new File(txFieldPathProject.getText() + "/pom.xml");
 
             JSONObject json = XML.toJSONObject(readFile(pomFile));
@@ -286,8 +313,7 @@ public class HomeView extends javax.swing.JFrame {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-    }//GEN-LAST:event_btnPomSaveActionPerformed
+    }
 
     private String readFile(File file) throws IOException {
         BufferedReader reader = new BufferedReader(new FileReader(file));
@@ -306,19 +332,24 @@ public class HomeView extends javax.swing.JFrame {
             reader.close();
         }
     }
-    
+
     private synchronized void runCommand(String cmd) throws IOException, InterruptedException {
-        cmd += "cd " + txFieldPathProject.getText() + " && " + cmd;
-        Process proc = Runtime.getRuntime().exec(cmd);
-        BufferedReader reader =  
-              new BufferedReader(new InputStreamReader(proc.getInputStream()));
+//        Process proc = Runtime.getRuntime().exec(cmd);
+//        BufferedReader reader =
+//              new BufferedReader(new InputStreamReader(proc.getInputStream()));
+//
+//        String line = "";
+//        while((line = reader.readLine()) != null) {
+//            loggerCmd.sendLine(line + "\n");
+//        }
+//
+//        proc.waitFor();
 
-        String line = "";
-        while((line = reader.readLine()) != null) {
-            loggerCmd.sendLine(line + "\n");
-        }
 
-        proc.waitFor();   
+        ExecutorTask task = new ExecutorTask(cmd, this);
+        Thread executorThread = new Thread(task);
+        executorThread.start();
+
     }
 
     private void txFieldMavenPathActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txFieldMavenPathActionPerformed
@@ -327,12 +358,21 @@ public class HomeView extends javax.swing.JFrame {
 
     private void btnMavenSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMavenSaveActionPerformed
         // TODO add your handling code here:
+        try {
+            configurationFactory.addProjectPath(txFieldPathProject.getText());
+            configurationFactory.addMavenPath(txFieldMavenPath.getText());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }//GEN-LAST:event_btnMavenSaveActionPerformed
+
 
     private void btnBuildActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBuildActionPerformed
         StringBuilder builder = new StringBuilder();
         builder.append(txFieldMavenPath.getText());
-        builder.append(" build");
+        builder.append(" -f ");
+        builder.append(txFieldPathProject.getText() + "/pom.xml");
+        builder.append(" install");
 
         int[] selecionados = listCheckboxs.getSelectedIndices();
         for (int selecionado : selecionados) {
@@ -366,9 +406,16 @@ public class HomeView extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JSplitPane jSplitPane1;
     private javax.swing.JList<String> listCheckboxs;
     private javax.swing.JTextField txFieldMavenPath;
     private javax.swing.JTextField txFieldPathProject;
     private javax.swing.JTextArea txtareaCmdLog;
+
+    @Override
+    public void sendLine(String line) {
+        txtareaCmdLog.append(line + "\n");
+        txtareaCmdLog.setCaretPosition(txtareaCmdLog.getDocument().getLength());
+    }
     // End of variables declaration//GEN-END:variables
 }
