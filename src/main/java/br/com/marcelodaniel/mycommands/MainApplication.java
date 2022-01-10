@@ -1,9 +1,9 @@
 package br.com.marcelodaniel.mycommands;
 
+import br.com.marcelodaniel.mycommands.database.SQLiteJDBCDriverConnection;
 import br.com.marcelodaniel.mycommands.home.HomeView;
 import com.formdev.flatlaf.FlatDarkLaf;
-import com.formdev.flatlaf.FlatLightLaf;
-import javax.swing.UIManager;
+import javax.swing.*;
 
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
@@ -17,6 +17,7 @@ public class MainApplication {
 
     public static void main(String[] args) {
         try {
+            SQLiteJDBCDriverConnection.builder();
 //            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
 //                if ("Nimbus".equals(info.getName())) {
 //                    javax.swing.UIManager.setLookAndFeel(info.getClassName());

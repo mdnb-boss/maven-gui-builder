@@ -4,25 +4,24 @@
  */
 package br.com.marcelodaniel.mycommands.home;
 
-import br.com.marcelodaniel.mycommands.configuration.ConfigurationFactory;
-import br.com.marcelodaniel.mycommands.configuration.ConfigurationFactoryImpl;
+import br.com.marcelodaniel.mycommands.database.conditions.SqlWhere;
+import br.com.marcelodaniel.mycommands.database.configuration.ConfigurationDatabaseHelper;
 import br.com.marcelodaniel.mycommands.executor.ExecutorTask;
 import br.com.marcelodaniel.mycommands.view.CheckboxListCellRenderer;
-
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.json.XML;
+import javax.swing.*;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.DefaultListSelectionModel;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.json.XML;
-
-import static br.com.marcelodaniel.mycommands.configuration.ConfigurationFactoryImpl.KEY_MAVEN_PATH;
-import static br.com.marcelodaniel.mycommands.configuration.ConfigurationFactoryImpl.KEY_PROJECT_PATH;
 
 /**
  * @author marcelo
@@ -31,27 +30,41 @@ public class HomeView extends javax.swing.JFrame implements ExecutorTask.LoggerF
 
     private String[] modulosLidos;
 
-    private HomeService homeService;
+    private ConfigurationDatabaseHelper configurationDatabaseHelper;
 
-    private ConfigurationFactory configurationFactory;
+    private List<Map<String, Object>> configuracoes;
 
     /**
      * Creates new form HomeView
      */
     public HomeView() {
-        initComponents();
-        this.homeService = new HomeServiceImpl();
 
-        try {
-            this.configurationFactory = new ConfigurationFactoryImpl();
-            this.txFieldPathProject.setText(configurationFactory.get(KEY_PROJECT_PATH));
-            this.txFieldMavenPath.setText(configurationFactory.get(KEY_MAVEN_PATH));
-            if (!configurationFactory.get(KEY_PROJECT_PATH).isEmpty()) {
-                loadModules();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        configurationDatabaseHelper = new ConfigurationDatabaseHelper();
+
+        List<String> columns = new ArrayList<>();
+        columns.add("chave");
+        columns.add("valor");
+
+        Map<String, Object> wheres = new HashMap<>();
+        configuracoes = configurationDatabaseHelper.select("config", columns, wheres);
+
+
+        initComponents();
+
+        this.txFieldPathProject.setText(configuracoes.get(0).get("valor").toString());
+        this.txFieldMavenPath.setText(configuracoes.get(1).get("valor").toString());
+        loadModules();
+
+        ArrayList<Map<String, Object>> valuesArr = new ArrayList<>();
+        Map<String, Object> values = new HashMap<>();
+        values.put(ConfigurationDatabaseHelper.KEY_PROJECT_PATH, txFieldPathProject.getText());
+        values.put(ConfigurationDatabaseHelper.KEY_MAVEN_PATH, txFieldMavenPath.getText());
+        valuesArr.add(values);
+
+        List<SqlWhere> wheres2 = new ArrayList<>();
+        wheres2.add(new SqlWhere("chave", SqlWhere.Condition.EQUAL, ConfigurationDatabaseHelper.KEY_PROJECT_PATH));
+
+        configurationDatabaseHelper.update("config", valuesArr, wheres2);
     }
 
     /**
@@ -84,12 +97,12 @@ public class HomeView extends javax.swing.JFrame implements ExecutorTask.LoggerF
         javax.swing.GroupLayout jFrame1Layout = new javax.swing.GroupLayout(jFrame1.getContentPane());
         jFrame1.getContentPane().setLayout(jFrame1Layout);
         jFrame1Layout.setHorizontalGroup(
-            jFrame1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 400, Short.MAX_VALUE)
+                jFrame1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGap(0, 400, Short.MAX_VALUE)
         );
         jFrame1Layout.setVerticalGroup(
-            jFrame1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 300, Short.MAX_VALUE)
+                jFrame1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGap(0, 300, Short.MAX_VALUE)
         );
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -152,9 +165,15 @@ public class HomeView extends javax.swing.JFrame implements ExecutorTask.LoggerF
         jSplitPane1.setOrientation(javax.swing.JSplitPane.VERTICAL_SPLIT);
 
         listCheckboxs.setModel(new javax.swing.AbstractListModel<String>() {
-            String[] strings = { };
-            public int getSize() { return strings.length; }
-            public String getElementAt(int i) { return strings[i]; }
+            String[] strings = {};
+
+            public int getSize() {
+                return strings.length;
+            }
+
+            public String getElementAt(int i) {
+                return strings[i];
+            }
         });
         jScrollPane1.setViewportView(listCheckboxs);
 
@@ -169,55 +188,55 @@ public class HomeView extends javax.swing.JFrame implements ExecutorTask.LoggerF
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jSplitPane1)
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(chkSkipTests)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(btnClean)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnCleanBuild)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnBuild))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                            .addComponent(txFieldPathProject, javax.swing.GroupLayout.DEFAULT_SIZE, 755, Short.MAX_VALUE)
-                            .addComponent(txFieldMavenPath))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                            .addComponent(btnPomSave, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(btnMavenSave, javax.swing.GroupLayout.Alignment.LEADING)))
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jLabel1)
-                        .addGap(0, 0, Short.MAX_VALUE)))
-                .addContainerGap())
+                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(layout.createSequentialGroup()
+                                .addContainerGap()
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addComponent(jSplitPane1)
+                                        .addGroup(layout.createSequentialGroup()
+                                                .addComponent(chkSkipTests)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                                .addComponent(btnClean)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(btnCleanBuild)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(btnBuild))
+                                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                                                .addGap(0, 0, Short.MAX_VALUE)
+                                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                                                        .addComponent(txFieldPathProject, javax.swing.GroupLayout.DEFAULT_SIZE, 755, Short.MAX_VALUE)
+                                                        .addComponent(txFieldMavenPath))
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                                                        .addComponent(btnPomSave, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                                        .addComponent(btnMavenSave, javax.swing.GroupLayout.Alignment.LEADING)))
+                                        .addGroup(layout.createSequentialGroup()
+                                                .addComponent(jLabel1)
+                                                .addGap(0, 0, Short.MAX_VALUE)))
+                                .addContainerGap())
         );
         layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addGap(23, 23, 23)
-                .addComponent(jLabel1)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(btnPomSave)
-                    .addComponent(txFieldPathProject, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(txFieldMavenPath, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnMavenSave))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jSplitPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 560, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(btnBuild)
-                    .addComponent(btnCleanBuild)
-                    .addComponent(btnClean)
-                    .addComponent(chkSkipTests))
-                .addContainerGap())
+                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(layout.createSequentialGroup()
+                                .addGap(23, 23, 23)
+                                .addComponent(jLabel1)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(btnPomSave)
+                                        .addComponent(txFieldPathProject, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(txFieldMavenPath, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(btnMavenSave))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jSplitPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 560, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(btnBuild)
+                                        .addComponent(btnCleanBuild)
+                                        .addComponent(btnClean)
+                                        .addComponent(chkSkipTests))
+                                .addContainerGap())
         );
 
         pack();
@@ -244,6 +263,13 @@ public class HomeView extends javax.swing.JFrame implements ExecutorTask.LoggerF
         }
 
         System.out.println(builder.toString());
+
+        try {
+            runCommand(builder.toString());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }//GEN-LAST:event_btnCleanActionPerformed
 
     private void btnCleanBuildActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCleanBuildActionPerformed
@@ -295,20 +321,25 @@ public class HomeView extends javax.swing.JFrame implements ExecutorTask.LoggerF
         });
 
         try {
-            configurationFactory.addProjectPath(txFieldPathProject.getText());
-            configurationFactory.addMavenPath(txFieldMavenPath.getText());
+
+          // TODO salvar configs
 
             File pomFile = new File(txFieldPathProject.getText() + "/pom.xml");
 
-            JSONObject json = XML.toJSONObject(readFile(pomFile));
+            String readFileTxt = readFile(pomFile);
 
-            JSONArray dependencies = json.getJSONObject("project").getJSONObject("modules").getJSONArray("module");
+            if (readFileTxt != null) {
+                JSONObject json = XML.toJSONObject(readFileTxt);
 
-            modulosLidos = new String[dependencies.length()];
-            for (int i = 0; i < dependencies.length(); i++) {
-                modulosLidos[i] = dependencies.getString(i);
+                JSONArray dependencies = json.getJSONObject("project").getJSONObject("modules").getJSONArray("module");
+
+                modulosLidos = new String[dependencies.length()];
+                for (int i = 0; i < dependencies.length(); i++) {
+                    modulosLidos[i] = dependencies.getString(i);
+                }
+                listCheckboxs.setListData(modulosLidos);
+
             }
-            listCheckboxs.setListData(modulosLidos);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -316,6 +347,10 @@ public class HomeView extends javax.swing.JFrame implements ExecutorTask.LoggerF
     }
 
     private String readFile(File file) throws IOException {
+
+        if (!file.exists())
+            return null;
+
         BufferedReader reader = new BufferedReader(new FileReader(file));
         String line = null;
         StringBuilder stringBuilder = new StringBuilder();
@@ -353,17 +388,12 @@ public class HomeView extends javax.swing.JFrame implements ExecutorTask.LoggerF
     }
 
     private void txFieldMavenPathActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txFieldMavenPathActionPerformed
-        // TODO add your handling code here:
     }//GEN-LAST:event_txFieldMavenPathActionPerformed
 
     private void btnMavenSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMavenSaveActionPerformed
-        // TODO add your handling code here:
-        try {
-            configurationFactory.addProjectPath(txFieldPathProject.getText());
-            configurationFactory.addMavenPath(txFieldMavenPath.getText());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        // TODO refatorar para salvar no banco os novos paths
+//            configurationFactory.addProjectPath(txFieldPathProject.getText());
+//            configurationFactory.addMavenPath(txFieldMavenPath.getText());
     }//GEN-LAST:event_btnMavenSaveActionPerformed
 
 
@@ -388,6 +418,12 @@ public class HomeView extends javax.swing.JFrame implements ExecutorTask.LoggerF
         }
 
         System.out.println(builder.toString());
+        try {
+            runCommand(builder.toString());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }//GEN-LAST:event_btnBuildActionPerformed
 
     private void chkSkipTestsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkSkipTestsActionPerformed
